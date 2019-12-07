@@ -23,10 +23,14 @@ BONK_ACK                = 0xffff0060
 
 TIMER_INT_MASK          = 0x8000
 TIMER_ACK               = 0xffff006c
-
+GET_INVENTORY 					=	0xffff00e8
+USE_POWERUP             = 0xffff00ec
 REQUEST_PUZZLE_INT_MASK = 0x800       ## Puzzle
 REQUEST_PUZZLE_ACK      = 0xffff00d8  ## Puzzle
 SWITCH_MODE      = 0xffff00f0
+PICKUP_POWERUP = 0xffff00f4
+
+POWERUP_MAP = 0xffff00e0
 
 ### Puzzle
 GRIDSIZE = 8
@@ -36,6 +40,7 @@ heap:        .half 0:50000
 
 flag:					.word  0
 b_flag:				.word  0
+flagg:				.word	0
 
 .text
 main:
@@ -43,24 +48,66 @@ main:
 	li      $t4, 0
 	or      $t4, $t4, BONK_INT_MASK # request bonk
 	or      $t4, $t4, REQUEST_PUZZLE_INT_MASK	        # puzzle interrupt bit
+	#or      $t4, $t4, TIMER_INT_MASK	        # puzzle interrupt bit
+	li    $t0,   10;
+	sw    $t0,   VELOCITY;
+	li		$t2,	90;			# angle to 100;
+
+	sw		$t2,	ANGLE($0);
+	li		$t2,	1;
+	sw		$t2,	ANGLE_CONTROL($0)	#relative
 	or      $t4, $t4, 1 # global enable
 	mtc0    $t4, $12
+
+
+
+	main_f:
+	li   $t0, 1
+
 	li		$t1,		1;
 	sw 		$t1,		SWITCH_MODE($0);
 
 getpaint:
+li   $t0, 1
+
+
+	# lw     $t0,   POWERUP_MAP
+	#
+	# lw      $t1, 4($t0)
+	#
+	# lw      $t4,  0($t1)   #x
+	# lw      $t5,  4($t1) 	#y
+	#
+	# lw      $t6,  BOT_X   #our x
+	# lw      $t7,  BOT_Y
+	#PICK
+	# move    $a0,  $t4
+	# move    $a1,  $t5
+	# jal     euclidean_dist
+	# move    $t5,   $v0   #POWERUP distance
+	#
+	# move    $a0,  $t6
+	# move    $a1,  $t7
+	# jal     euclidean_dist
+
 	la      $t0, puzzle
 	sw      $t0, REQUEST_PUZZLE
 	li     $t0,   0
 	la     $t2,   flag
 	sw     $t0,   0($t2)
 looper:
+
+
 	li      $t9,  1
 	la      $t0,  flag
 	lw       $t0,  0($t0)
 	beq 		$t9,	$t0,	after_looper
 	j  			looper
 after_looper:
+li   $t0, 1
+
+
+
 	la  $a0, puzzle
 	la  $a1, heap
 	jal copy_board    # Copy board to heap
@@ -71,11 +118,15 @@ after_looper:
 	jal solve
 	la      $t2, puzzle
 	sw      $t2, SUBMIT_SOLUTION
-	li    $t0,   10;
+	li    $t0,   5;
 	sw    $t0,   VELOCITY;
-	j main
+	j main_f
 
 	solve:
+	li   $t0, 1
+
+	sw   $t0,  PICKUP_POWERUP
+
 	    sub     $sp, $sp, 36
 	    sw      $ra, 0($sp)
 	    sw      $s0, 4($sp)
@@ -111,6 +162,8 @@ after_looper:
 
 	    j solve_done
 	solve_not_done:
+	li   $t0, 1
+
 
 	    move $a0, $s2 # current_board
 	    jal increment_heap
@@ -118,6 +171,9 @@ after_looper:
 
 	    li  $v0, 0 # changed = false
 	solve_start_do:
+	li   $t0, 1
+
+
 
 	    move $a0, $s2
 
@@ -146,6 +202,8 @@ after_looper:
 	    j   solve_done
 	solve_board_not_done_after_dowhile:
 
+	li   $t0, 1
+
 
 	    mul $t0, $s0, $s7  # row*GRIDSIZE
 	    add $t0, $t0, $s1  # row*GRIDSIZE + col
@@ -155,6 +213,10 @@ after_looper:
 
 	    li $s5, 0 # char number = 0
 	solve_start_guess:
+	li   $t0, 1
+
+	sw   $t0,  PICKUP_POWERUP
+
 	    bge $s5, $s7, solve_start_guess_end # number < GRIDSIZE
 	    li $t0, 1
 	    sll $t1, $t0, $s5 # (1 << number)
@@ -168,6 +230,8 @@ after_looper:
 	    bne  $s1, $t0, solve_start_guess_same_row # col < GRIDSIZE // col==GRIDSIZE-1
 	    addi $a1, $a1, 1  # row + 1
 	solve_start_guess_same_row:
+	sw   $t0,  PICKUP_POWERUP
+	sw   $0,  USE_POWERUP
 	    move $a2, $s1     # col
 	    addu $a2, $a2, 1  # col + 1
 	    divu $a2, $s7
@@ -178,12 +242,16 @@ after_looper:
 	    bne  $v0, $0, solve_done_true # if done {return true}
 	    sh   $s6, 0($s4)  # current_board[row*GRIDSIZE + col] = possibles;
 	solve_start_guess_else:
+
 	    addi $s5, $s5, 1
 	    j solve_start_guess
 	solve_done_false:
 	solve_start_guess_end:
+	sw   $t0,  PICKUP_POWERUP
+	sw   $0,  USE_POWERUP
 	    li  $v0, 0        # done = false
 	solve_done:
+
 	    lw  $ra, 0($sp)
 	    lw  $s0, 4($sp)
 	    lw  $s1, 8($sp)
@@ -199,6 +267,8 @@ after_looper:
 	    li $v0, 1
 	    j solve_done
 	rule1:
+	sw   $t0,  PICKUP_POWERUP
+
 	        sub     $sp, $sp, 36
 	        sw      $ra, 0($sp)
 	        sw      $s0, 4($sp)
@@ -677,10 +747,21 @@ interrupt_dispatch:            # Interrupt:
 
 bonk_interrupt:
 	sw 		$0, BONK_ACK
-	li		$t2,	100;			# angle to 100;
+	la    $t2,  flagg
+	lw    $t1,  0($t2)
+	bne   $0, $t1, bife
+	li		$t3,	0;			# angle to 100;
+	li    $t4, 1;
+	sw		$t3,	ANGLE($0);
+	sw		$t4,	ANGLE_CONTROL($0)	#relative
+	sw    $t4, 0($t2)
+	j     bif
+bife:
+	li		$t2,	113;			# angle to 100;
 	sw		$t2,	ANGLE($0);
 	li		$t2,	0;
 	sw		$t2,	ANGLE_CONTROL($0)	#relative
+bif:
 	li    $t0,   10;
 	sw    $t0,   VELOCITY;
     j       interrupt_dispatch    # see if other interrupts are waiting
@@ -694,9 +775,15 @@ request_puzzle_interrupt:
 	j	interrupt_dispatch
 
 timer_interrupt:
+
+
+li    $t0,   1;
 	sw 		$0, TIMER_ACK
-	#Fill in your code here
-    j        interrupt_dispatch    # see if other interrupts are waiting
+
+	li    $t0,  0
+	sw   $t0,  USE_POWERUP
+
+  j        interrupt_dispatch    # see if other interrupts are waiting
 
 non_intrpt:                # was some non-interrupt
     li        $v0, PRINT_STRING
