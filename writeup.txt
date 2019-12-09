@@ -1,0 +1,12 @@
+  Based on the starting position of our bot. We either go to the top right gadget
+or the bottom left gadget.  Having acquired this power-up, we use this power-up
+as soon as possible - meaning on the next cycle that we had paint.  Our movement
+is relative angle is 113 or 270.  We have an angle of 270 when we want the
+first powerup on the first bonk interrupt. We have 113 relative angle thereafter
+as we move throughout the tiles with our paint buckets.
+  We pick up while we are still moving through the platform - this is an optimization
+in tasks since we pickup powerups while still solving puzzles. We also never stop
+even while solving puzzles and if we have empty buckets in order to increase
+chances of obtaining powerups.  Since we have a strategy where we use the powerup
+immediately after picking it up, we rarely end up having two powerups in our inventory
+at the same time.   

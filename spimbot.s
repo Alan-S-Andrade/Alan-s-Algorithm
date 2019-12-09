@@ -30,7 +30,7 @@ REQUEST_PUZZLE_INT_MASK = 0x800       ## Puzzle
 REQUEST_PUZZLE_ACK      = 0xffff00d8  ## Puzzle
 
 GET_PAINT_BUCKETS       = 0xffff00e4
-SWITCH_MODE             = 0xffff00f0
+SWITCH_MODE             = 0xffff00f0 # enable paintbrush
 
 ### Puzzle
 GRIDSIZE = 8
@@ -43,7 +43,7 @@ main:
     or      $t4, $t4, REQUEST_PUZZLE_INT_MASK           # puzzle interrupt bit
     or      $t4, $t4, 1 # global enable
     mtc0    $t4, $12
-    
+
     #Fill in your code here
     jr $ra
 
