@@ -53,9 +53,9 @@ main:
 	sw    $t0,   VELOCITY;
 	li		$t2,	90;			# angle to 100;
 
-	sw		$t2,	ANGLE($0);
-	li		$t2,	1;
-	sw		$t2,	ANGLE_CONTROL($0)	#relative
+	#sw		$t2,	ANGLE($0);
+	#li		$t2,	1;
+	#sw		$t2,	ANGLE_CONTROL($0)	#relative
 	or      $t4, $t4, 1 # global enable
 	mtc0    $t4, $12
 
@@ -750,10 +750,10 @@ bonk_interrupt:
 	la    $t2,  flagg
 	lw    $t1,  0($t2)
 	bne   $0, $t1, bife
-	li		$t3,	0;			# angle to 100;
+	li		$t3,	270;			# angle to 100;
 	li    $t4, 1;
 	sw		$t3,	ANGLE($0);
-	sw		$t4,	ANGLE_CONTROL($0)	#relative
+	sw		$0,	ANGLE_CONTROL($0)	#relative
 	sw    $t4, 0($t2)
 	j     bif
 bife:
