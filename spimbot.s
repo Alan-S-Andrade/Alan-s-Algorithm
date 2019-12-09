@@ -57,7 +57,7 @@ main:
 
 	#
 	lw      $t8,    BOT_X
-	li $t7, 30
+	li $t7, 20
 	bge     $t8, $t7, main_s
 	sw		$t2,	ANGLE($0);
 	li		$t2,	1;
