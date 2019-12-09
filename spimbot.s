@@ -49,16 +49,25 @@ main:
 	or      $t4, $t4, BONK_INT_MASK # request bonk
 	or      $t4, $t4, REQUEST_PUZZLE_INT_MASK	        # puzzle interrupt bit
 	#or      $t4, $t4, TIMER_INT_MASK	        # puzzle interrupt bit
+	or      $t4, $t4, 1 # global enable
+	mtc0    $t4, $12
 	li    $t0,   10;
 	sw    $t0,   VELOCITY;
 	li		$t2,	90;			# angle to 100;
 
-	#sw		$t2,	ANGLE($0);
-	#li		$t2,	1;
-	#sw		$t2,	ANGLE_CONTROL($0)	#relative
-	or      $t4, $t4, 1 # global enable
-	mtc0    $t4, $12
-
+	#
+	lw      $t8,    BOT_X
+	li $t7, 30
+	bge     $t8, $t7, main_s
+	sw		$t2,	ANGLE($0);
+	li		$t2,	1;
+	sw		$t2,	ANGLE_CONTROL($0)	#relative
+	j main_f
+	main_s:
+	li		$t2,	270;			# angle to 100;
+	sw		$t2,	ANGLE($0);
+	li		$t2,	1;
+	sw		$t2,	ANGLE_CONTROL($0)	#relative
 
 
 	main_f:
