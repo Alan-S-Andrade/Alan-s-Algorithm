@@ -127,7 +127,7 @@ li   $t0, 1
 	jal solve
 	la      $t2, puzzle
 	sw      $t2, SUBMIT_SOLUTION
-	li    $t0,   5;
+	li    $t0,   10;
 	sw    $t0,   VELOCITY;
 	j main_f
 
